@@ -1,0 +1,455 @@
+:root {
+  --bg: #141817;
+  --panel: #202523;
+  --panel2: #191e1c;
+  --edge: #3b423d;
+  --muted: #a3a99e;
+  --text: #f0efe8;
+  --mint: #f1b833;
+  --blue: #b6c6cb;
+  --amber: #f4bd43;
+  --red: #ff777d;
+}
+
+body {
+  position: relative;
+  z-index: 0;
+  background-color: var(--bg);
+  background-image: radial-gradient(ellipse at 83% 6%, #72572238, transparent 30%),
+    linear-gradient(115deg, #ffffff03 1px, transparent 1px),
+    linear-gradient(25deg, #ffffff04 1px, transparent 1px);
+  background-size: auto, 44px 44px, 44px 44px;
+  background-position: center, 0 0, 0 0;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 76px 0 0;
+  background: url('../assets/cantera-excavadora.png') no-repeat center 10vh / cover;
+  content: "";
+  opacity: .2;
+  filter: brightness(.36) saturate(.78) contrast(1.08);
+  pointer-events: none;
+}
+
+.topbar {
+  border-bottom-color: #ffffff14;
+  background: #141918ed;
+  backdrop-filter: blur(14px);
+}
+
+.brand-icon {
+  border-color: #f7d47c;
+  background: #f0b632;
+  color: #151817;
+  box-shadow: 0 5px 18px #e7a8242b;
+}
+
+.brand-accent { color: #f2be49; }
+.brand small { color: #899189; }
+.selected-name { color: #deded5; }
+.page-shell { max-width: 1500px; padding-top: 28px; }
+.eyebrow { color: #e1b44c; }
+.eyebrow-line { background: #f0b632; }
+
+.machine-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap: 28px;
+  min-height: 348px;
+  margin: 0 0 20px;
+  padding: 25px;
+  overflow: hidden;
+  border: 1px solid #44483d;
+  border-radius: 17px;
+  background-image: linear-gradient(90deg, #171c1af2 0%, #1a1f1dcf 42%, #1a1f1d99 100%), url('../assets/cantera-excavadora.png');
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 18px 48px #0004;
+}
+
+.machine-hero::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(#f7ca57, #b67a14);
+  content: "";
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 7px 2px 7px 10px;
+}
+
+.hero-kickers { display: flex; gap: 8px; margin-top: 18px; }
+.hero-kicker {
+  padding: 6px 9px;
+  border: 1px solid #6d5c31;
+  border-radius: 5px;
+  background: #352d1b;
+  color: #e4c36e;
+  font: 500 8px 'DM Mono', monospace;
+  letter-spacing: .85px;
+}
+
+.machine-hero h1 {
+  margin: 15px 0 11px;
+  color: #f0efe8;
+  font-size: clamp(32px, 4vw, 49px);
+  line-height: 1.08;
+  letter-spacing: -2px;
+}
+
+.machine-hero h1 em { color: #f1bd42; font-style: normal; }
+.hero-description { max-width: 510px; margin: 0; color: #a6aea4; font-size: 12px; line-height: 1.8; }
+.hero-bottom { display: flex; align-items: flex-end; gap: 18px; margin-top: 22px; }
+.vehicle-picker { width: min(290px, 62%); }
+.vehicle-picker label { color: #a0a394; }
+
+.form-select, .form-control {
+  border-color: #414940;
+  background-color: #181e1c;
+  color: #efefe7;
+}
+
+.form-select:focus, .form-control:focus {
+  border-color: #e6b63d;
+  background-color: #181e1c;
+  color: #efefe7;
+  box-shadow: 0 0 0 .2rem #e6b63d22;
+}
+
+.form-select option { background: #181e1c; color: #efefe7; }
+.hero-model { display: flex; align-items: center; gap: 9px; padding: 0 0 5px; }
+.model-mark {
+  display: grid;
+  place-items: center;
+  width: 31px;
+  height: 31px;
+  border: 1px solid #66532a;
+  border-radius: 8px;
+  background: #2a2519;
+  color: #f3c24e;
+  font: 700 15px 'DM Mono', monospace;
+}
+
+.hero-model b, .hero-model small { display: block; }
+.hero-model b { color: #e7e5dc; font: 700 9px 'DM Mono', monospace; letter-spacing: 1px; }
+.hero-model small { margin-top: 4px; color: #868f85; font: 500 7px 'DM Mono', monospace; letter-spacing: .7px; }
+
+.machine-visual {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-height: 294px;
+  overflow: hidden;
+  border: 1px solid #4a4b40;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #e8e5da, #cfcbbd 65%, #aaa99e);
+  box-shadow: inset 0 0 40px #30332a2b;
+}
+
+.visual-grid {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(#8c897a20 1px, transparent 1px), linear-gradient(90deg, #8c897a20 1px, transparent 1px);
+  background-size: 25px 25px;
+  mask-image: linear-gradient(90deg, transparent, #000 20%, #000 80%, transparent);
+}
+
+.machine-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  max-height: 330px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: contrast(1.06) saturate(.96);
+  transform: scale(1.03);
+  transition: transform .5s ease;
+}
+
+.machine-visual:hover .machine-image { transform: scale(1.07); }
+.machine-visual::after {
+  position: absolute;
+  z-index: 2;
+  inset: auto 0 0;
+  height: 25%;
+  background: linear-gradient(transparent, #292a2540);
+  content: "";
+  pointer-events: none;
+}
+
+.photo-stamp {
+  position: absolute;
+  z-index: 3;
+  top: 13px;
+  left: 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid #a8a697;
+  border-radius: 4px;
+  background: #f1efe6d9;
+  color: #343831;
+  font: 500 7px 'DM Mono', monospace;
+  letter-spacing: .8px;
+}
+
+.stamp-dot { width: 6px; height: 6px; border-radius: 50%; background: #d39a1f; box-shadow: 0 0 0 3px #d39a1f25; }
+.visual-serial { position: absolute; right: 13px; bottom: 12px; z-index: 3; display: flex; flex-direction: column; align-items: flex-end; color: #343831; font: 500 7px 'DM Mono', monospace; letter-spacing: 1px; }
+.visual-serial b { margin: 3px 0; color: #1c211e; font-size: 10px; }
+.visual-serial small { font-size: 7px; }
+.visual-number { position: absolute; top: -30px; right: 10px; z-index: 0; color: #20251c0e; font: 800 120px Manrope, sans-serif; line-height: 1; }
+
+.status-grid { gap: 11px; margin-bottom: 15px; }
+.status-card {
+  position: relative;
+  min-height: 99px;
+  border-color: #3b423b;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #222724, #1b201e);
+  box-shadow: 0 8px 22px #0002;
+}
+
+.status-card::before { position: absolute; inset: 0 auto 0 0; width: 2px; border-radius: 10px 0 0 10px; background: #d6a433; content: ""; opacity: .75; }
+.status-label { color: #a8aea2; }
+.status-caption { color: #858e83; }
+.state-dot.online { background: #edbc42; box-shadow: 0 0 12px #edbc4270; }
+.state-dot.pending { background: #d9a532; box-shadow: 0 0 12px #d9a53260; }
+.ws-symbol { color: #eab941; }
+.api-symbol { color: #b6c6cb; }
+.db-symbol { color: #d5ad58; }
+.info-dot { border-color: #8f9689; color: #c0c4ba; }
+
+.panel { border-color: #3b423b; border-radius: 11px; background: linear-gradient(145deg, #222724, #1b201e); box-shadow: 0 12px 30px #0003; }
+.panel h2 { color: #f1f0e8; }
+.eyebrow-dark { color: #d4ae57; }
+.panel-description { color: #a1a99e; }
+.touch-hint, .count-badge { border-color: #4a4c40; background: #252921; color: #c4b37a; }
+.control-divider { background: #3a4039; }
+.readout-label { color: #b0a77e; }
+.move-readout { border-color: #41463b; background: #171c1a; }
+.move-readout strong { color: #f0efe7; }
+.readout-rule { background: #41463b; }
+.action-status { color: #edc44f; }
+.command-button { border-color: #454b40; background: linear-gradient(145deg, #292e28, #202522); color: #f0efe8; }
+.command-button:hover:not(:disabled), .command-button:focus-visible { border-color: #efbd3e; box-shadow: 0 0 0 2px #efbd3e1b; }
+.command-icon { background: #39311d; color: #f1c34f; }
+.command-button small { color: #9c9e8e; }
+.command-button.command-stop { border-color: #714344; background: #302122; }
+.command-stop .command-icon { background: #492a32; color: #ff898a; }
+.joy-key { border-color: #464a40; background: linear-gradient(145deg, #32372f, #252a25); color: #dddcd1; box-shadow: 0 5px 12px #0004; }
+.joy-key:hover, .joy-key:focus-visible { border-color: #f0bf42; color: #ffd45e; }
+.joy-key:active, .joy-key.joy-active { border-color: #ffce52; background: #66501f; color: #fff0ad; }
+.joy-center { color: #f1bd42; }
+
+/* Game-controller style analog joystick. Its direction buttons are digital commands from the API catalog. */
+.joystick-layout { grid-template-columns: minmax(250px, 1fr) minmax(150px, .58fr); gap: 22px; }
+.gamepad-shell {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 370px);
+  min-height: 286px;
+  margin: 0 auto;
+  padding: 14px 17px 12px;
+}
+
+.gamepad-shell::before {
+  position: absolute;
+  z-index: -2;
+  inset: 32px 5px 10px;
+  border: 1px solid #555b50;
+  border-radius: 43% 43% 35% 35% / 30% 30% 24% 24%;
+  background: linear-gradient(155deg, #3c423b 0%, #272c28 45%, #171b19 100%);
+  box-shadow: inset 0 2px 5px #ffffff18, inset 0 -12px 22px #0008, 0 15px 26px #0007;
+  content: "";
+}
+
+.gamepad-shell::after {
+  position: absolute;
+  z-index: -1;
+  inset: 44px 17px 19px;
+  border: 1px solid #111614;
+  border-radius: 40% 40% 32% 32% / 28% 28% 25% 25%;
+  box-shadow: inset 0 0 0 1px #4e554a;
+  content: "";
+  pointer-events: none;
+}
+
+.gamepad-topline { z-index: 2; display: flex; justify-content: space-between; width: 100%; padding: 0 9px; color: #c9c2a5; font: 500 7px 'DM Mono', monospace; letter-spacing: .8px; }
+.gamepad-brand { display: inline-flex; align-items: center; gap: 6px; color: #efc550; }
+.gamepad-brand i { width: 6px; height: 6px; border-radius: 50%; background: #efbe45; box-shadow: 0 0 8px #efbe4588; }
+.gamepad-mode { color: #92998e; }
+
+.analog-stick {
+  position: relative;
+  z-index: 2;
+  width: min(58vw, 204px);
+  aspect-ratio: 1;
+  margin: 14px auto 7px;
+  border: 1px solid #111614;
+  border-radius: 50%;
+  background: radial-gradient(circle, #101412 0 57%, #5b604f 58% 60%, #272c28 61% 100%);
+  box-shadow: inset 0 0 0 5px #303630, inset 0 0 0 7px #73715a, inset 0 7px 14px #000c, 0 7px 12px #0008;
+  cursor: grab;
+  touch-action: none;
+  outline: none;
+}
+
+.analog-stick:focus-visible { outline: 3px solid #f3c547; outline-offset: 4px; }
+.analog-stick.stick-active { cursor: grabbing; }
+.stick-track { position: absolute; inset: 13%; border: 1px solid #686b57; border-radius: 50%; background: radial-gradient(circle, #242a25 0 45%, #555846 46% 48%, #232824 49% 100%); box-shadow: inset 0 0 12px #000a; }
+.track-mark { position: absolute; display: grid; place-items: center; width: 16px; height: 16px; color: #bba34f; font-size: 9px; text-shadow: 0 1px 2px #000; }
+.mark-up { top: 4px; left: 50%; transform: translateX(-50%); }
+.mark-down { bottom: 4px; left: 50%; transform: translateX(-50%); }
+.mark-left { top: 50%; left: 4px; transform: translateY(-50%); }
+.mark-right { top: 50%; right: 4px; transform: translateY(-50%); }
+
+.stick-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 76px;
+  height: 76px;
+  transform: translate(calc(-50% + var(--stick-x, 0px)), calc(-50% + var(--stick-y, 0px)));
+  border: 1px solid #a19a7b;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 25%, #74796b, #41473e 37%, #282d29 72%, #151917 100%);
+  box-shadow: inset 0 3px 5px #ffffff30, inset 0 -7px 11px #000a, 0 8px 12px #000b;
+  transition: transform .08s ease-out;
+  pointer-events: none;
+}
+
+.stick-active .stick-knob { transition: none; border-color: #e2bd51; }
+.knob-cap { display: grid; place-items: center; width: 33px; height: 33px; border: 1px solid #ad8932; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #f6d873, #b9821e 68%, #6c4a14); color: #38290e; font: 800 10px 'DM Mono', monospace; box-shadow: inset 0 2px 3px #fff7, 0 2px 4px #0008; }
+.gamepad-labels { display: flex; justify-content: space-between; width: 78%; color: #a49c7e; font: 500 6px 'DM Mono', monospace; letter-spacing: .8px; }
+.gamepad-grip { position: absolute; z-index: -3; bottom: 0; width: 89px; height: 100px; border: 1px solid #3b4039; border-radius: 35% 35% 52% 52%; background: linear-gradient(145deg, #282d29, #171b19); box-shadow: 0 10px 18px #0008; }
+.grip-left { left: 11px; transform: rotate(18deg); }
+.grip-right { right: 11px; transform: rotate(-18deg); }
+
+.joystick-stop {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  transform: none;
+  border: 1px solid #b9493e;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #da6251, #962d2b);
+  color: #fff6e9;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  box-shadow: inset 0 2px 2px #ffffff30, 0 4px 9px #0007;
+}
+
+.joystick-stop:hover, .joystick-stop:focus-visible {
+  transform: translateY(-1px);
+  border-color: #ff8f74;
+  background: linear-gradient(180deg, #ed725c, #ae3831);
+  color: white;
+  outline: 2px solid #ff8f7444;
+  outline-offset: 2px;
+}
+
+.joystick-stop:active { transform: translateY(1px) scale(.99); }
+
+.joystick-layout { grid-template-columns: minmax(360px, 1fr) minmax(145px, .47fr); gap: 16px; }
+.gamepad-shell { width: min(100%, 590px); min-height: 306px; padding: 14px 12px 10px; }
+.gamepad-shell::before { inset: 32px 4px 8px; border-radius: 35% 35% 30% 30% / 24% 24% 28% 28%; }
+.gamepad-shell::after { inset: 43px 16px 18px; border-radius: 33% 33% 29% 29% / 22% 22% 29% 29%; }
+.dual-stick-row { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; width: 100%; margin-top: 6px; }
+.stick-module { position: relative; width: min(100%, 250px); height: 258px; justify-self: center; }
+.stick-module .analog-stick { position: absolute; top: 28px; left: 50%; width: min(63%, 154px); margin: 0; transform: translateX(-50%); }
+.stick-module .axis-label { position: absolute; z-index: 3; max-width: 57px; overflow: hidden; padding: 3px 4px; border: 1px solid #5a5846; border-radius: 4px; background: #171b19e8; color: #e1c55f; font: 600 6px/1.25 'DM Mono', monospace; letter-spacing: .15px; text-align: center; text-overflow: ellipsis; white-space: normal; }
+.stick-module .direction-up { top: 3px; left: 50%; transform: translateX(-50%); }
+.stick-module .direction-down { bottom: 27px; left: 50%; transform: translateX(-50%); }
+.stick-module .direction-left { top: 50%; left: 0; transform: translateY(-50%); text-align: right; }
+.stick-module .direction-right { top: 50%; right: 0; transform: translateY(-50%); text-align: left; }
+.stick-caption { position: absolute; right: 0; bottom: 5px; left: 0; color: #979587; font: 500 6px 'DM Mono', monospace; letter-spacing: 1.1px; text-align: center; }
+.stick-module .analog-stick:focus-visible { outline-offset: 3px; }
+.gamepad-shell > .gamepad-grip { bottom: -1px; width: 68px; height: 61px; opacity: .8; }
+.gamepad-shell > .grip-left { left: 20px; transform: rotate(18deg); }
+.gamepad-shell > .grip-right { right: 20px; transform: rotate(-18deg); }
+
+@media (max-width: 1100px) {
+  .workspace-grid { grid-template-columns: 1fr; }
+  .side-column { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.demo-icon { background: #40351e; color: #f5c44c; }
+.btn-demo { border-color: #816321; background: linear-gradient(100deg, #745318, #a2731d); color: #fff0bd; box-shadow: 0 6px 16px #d69b2620; }
+.btn-demo:hover:not(:disabled) { border-color: #f8cf60; background: #9a711e; color: #fff8df; }
+.demo-note, .event-item p { color: #9aa195; }
+.event-item { border-color: #383f38; }
+.event-meta { color: #d6c78e; }
+.event-meta time { color: #8e9487; }
+.clear-button { color: #c1ad68; }
+.clear-button:hover { color: #f2c341; }
+.page-footer { border-color: #ffffff18; color: #92998e; }
+.page-footer b { color: #d5cba7; }
+.settings-dialog { border-color: #57523e; background: #202522; }
+.settings-help { color: #a3aa9e; }
+.btn-primary { border-color: #d39d28; background: #a77916; color: #fff3cf; }
+.btn-primary:hover { border-color: #f1c44f; background: #bd8c20; color: white; }
+
+@media (max-width: 900px) {
+  .machine-hero { grid-template-columns: minmax(0, 1fr) minmax(300px, .9fr); gap: 17px; padding: 20px; }
+  .machine-visual { min-height: 270px; }
+  .joystick-layout { grid-template-columns: minmax(360px, 1fr) minmax(155px, .45fr); gap: 14px; }
+  .gamepad-shell { max-width: 560px; }
+}
+
+@media (max-width: 640px) {
+  .page-shell { padding-top: 17px; }
+  .machine-hero { grid-template-columns: 1fr; gap: 15px; margin-bottom: 12px; padding: 18px; }
+  .hero-copy { padding: 3px 0 0 5px; }
+  .machine-hero h1 { font-size: 36px; }
+  .hero-description { font-size: 11px; }
+  .hero-bottom { align-items: center; justify-content: space-between; gap: 8px; margin-top: 16px; }
+  .vehicle-picker { width: min(62%, 270px); }
+  .hero-model { gap: 7px; }
+  .model-mark { width: 28px; height: 28px; }
+  .hero-model b { font-size: 8px; }
+  .hero-model small { font-size: 6px; }
+  .machine-visual { min-height: 205px; max-height: 235px; }
+  .machine-image { max-height: 230px; }
+  .photo-stamp { top: 9px; left: 9px; }
+  .status-grid { gap: 7px; }
+  .status-card { min-height: 74px; padding: 10px 12px; }
+  .status-label { font-size: 8px; }
+  .status-caption { font-size: 8px; }
+  .status-value { font-size: 12px; }
+  body::before { inset: 64px 0 0; background-position: center; background-size: cover; opacity: .12; }
+  .joystick-layout { grid-template-columns: 1fr; gap: 13px; }
+  .gamepad-shell { width: min(100%, 540px); min-height: 300px; }
+  .dual-stick-row { grid-template-columns: 1fr; gap: 3px; }
+  .stick-module { height: 250px; }
+  .stick-module { width: min(100%, 245px); }
+  .stick-module .analog-stick { width: min(63%, 154px); }
+  .move-readout { grid-template-columns: 1fr 1fr; }
+  .move-readout .joystick-stop { grid-column: 1 / -1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .machine-image { transition: none; }
+}
