@@ -30,6 +30,8 @@ export const api = {
   vehicles: () => request('/api/vehiculos'),
   commands: (vehicleId) => request(`/api/vehiculos/${encodeURIComponent(vehicleId)}/comandos`),
   demos: (vehicleId) => request(`/api/vehiculos/${encodeURIComponent(vehicleId)}/demos`),
+  history: (vehicleId) => request(`/api/vehiculos/${encodeURIComponent(vehicleId)}/historial`),
+  state: (vehicleId) => request(`/api/vehiculos/${encodeURIComponent(vehicleId)}/estado`),
   execute: (vehicleId, commandId) => request(`/api/vehiculos/${encodeURIComponent(vehicleId)}/estado`, {
     method: 'POST', body: { id_comando: commandId, conectado: true, origen: 'WEB' },
   }),

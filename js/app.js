@@ -1,8 +1,7 @@
 import { api } from './api.js';
-import { DEFAULT_API_URL } from './config.js';
-import { activeCommands, auxiliaryCommandMap, commandLabel, directionCommand } from './commands.js';
+import { activeCommands, auxiliaryCommandMap, commandLabel, directionCommand, isOutputCommand, outputCommandMap, outputKindOf } from './commands.js';
 import { connectSocket } from './socket.js';
-import { addEvent, el, renderCommands, renderDemos, renderVehicles, setIndicator, showError, showReady, vehicleDisplayName } from './view.js';
+import { addEvent, el, renderCommands, renderDemos, renderHistory, renderOutputControls, setCurrentMovement, setDemoProgress, setIndicator, setOutputState, showError, showReady, vehicleDisplayName } from './view.js';
 
 let vehicles = [];
 let commands = [];
@@ -14,6 +13,81 @@ let socketStop;
 let activeStick = null;
 let stickStates = [];
 let latestAction = 0;
+let liveHistory = [];
+let apiHistory = [];
+let historyPage = 0;
+function readEstimatedState(kind) {
+  try {
+    const value = sessionStorage.getItem(`makasan-${kind}-state-estimate`);
+    return value === 'on' || value === 'off' ? value : null;
+  } catch { return null; }
+}
+const outputStates = { led: readEstimatedState('led'), sound: readEstimatedState('sound') };
+const expectedOutputEvents = new Map();
+
+function applyOutputCommand(command, kind, intent) {
+  if (!kind) return;
+  const map = outputCommandMap(commands, kind);
+  if (intent === 'on' || (map.on && String(map.on.id_comando) === String(command.id_comando))) {
+    outputStates[kind] = 'on';
+    try { sessionStorage.setItem(`makasan-${kind}-state-estimate`, 'on'); } catch { /* almacenamiento opcional */ }
+    setOutputState(kind, 'on'); return;
+  }
+  if (intent === 'off' || (map.off && String(map.off.id_comando) === String(command.id_comando))) {
+    outputStates[kind] = 'off';
+    try { sessionStorage.setItem(`makasan-${kind}-state-estimate`, 'off'); } catch { /* almacenamiento opcional */ }
+    setOutputState(kind, 'off'); return;
+  }
+  const isSingleToggle = map.actions.length === 1 && String(map.actions[0].id_comando) === String(command.id_comando);
+  if (intent === 'toggle' || isSingleToggle) {
+    const initialUnknown = outputStates[kind] === null;
+    outputStates[kind] = outputStates[kind] === 'on' ? 'off' : 'on';
+    const note = initialUnknown
+      ? 'Estimación desde apagado inicial; el equipo no reporta su estado físico.'
+      : 'Estimado por los pulsos aceptados en esta sesión; no es confirmación física.';
+    try { sessionStorage.setItem(`makasan-${kind}-state-estimate`, outputStates[kind]); } catch { /* almacenamiento opcional */ }
+    setOutputState(kind, outputStates[kind], note);
+  }
+}
+
+function allHistory() {
+  const merged = [...liveHistory, ...apiHistory].sort((a, b) => b.timestamp - a.timestamp);
+  const seen = new Set();
+  return merged.filter((item) => {
+    const key = `${item.commandId ?? item.title}|${item.timestamp}`;
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  }).slice(0, 30);
+}
+
+function refreshHistory() { historyPage = renderHistory(allHistory(), historyPage); }
+
+function recordLiveEvent(event) {
+  const isMovement = event?.tipo === 'estado_vehiculo'
+    || (event?.tipo === 'demo' && ['ejecutar_movimiento', 'finalizada'].includes(event?.accion));
+  if (!isMovement) return;
+  const record = addEvent(event, commands);
+  liveHistory.unshift(record);
+  liveHistory = liveHistory.slice(0, 30);
+  setCurrentMovement(record);
+  refreshHistory();
+  const eventData = event?.datos || {};
+  const command = commands.find((item) => String(item.id_comando) === String(eventData.id_comando));
+  if (command && (event.tipo === 'estado_vehiculo' || event.tipo === 'demo')) {
+    const kind = outputKindOf(command);
+    if (kind) {
+      const pending = expectedOutputEvents.get(String(command.id_comando));
+      if (pending) pending.seen = true;
+      else applyOutputCommand(command, kind, 'action');
+    }
+  }
+  if (event?.tipo === 'demo' && event?.accion === 'ejecutar_movimiento') {
+    const movementCommand = commands.find((item) => String(item.id_comando) === String(eventData.id_comando));
+    setDemoProgress('running', `DEMO en ejecución · paso ${eventData.orden ?? '…'}${movementCommand ? ` · ${commandLabel(movementCommand)}` : ''}`);
+  } else if (event?.tipo === 'demo' && event?.accion === 'finalizada') {
+    setDemoProgress('done', 'La API informó que la DEMO finalizó.');
+  }
+}
 
 async function checkApi() {
   setIndicator('api-dot', 'api-status', 'Comprobando', 'pending');
@@ -27,50 +101,88 @@ async function checkApi() {
 async function loadVehicles() {
   try {
     const result = await api.vehicles();
-    vehicles = Array.isArray(result) ? result : [];
-    renderVehicles(vehicles);
-    if (vehicles.length === 1) { el('vehicle-select').value = String(vehicles[0].id_vehiculo); await selectVehicle(); }
+    vehicles = Array.isArray(result) ? result.filter((vehicle) => vehicle && vehicle.activo !== false) : [];
+    const vehicle = vehicles[0];
+    if (!vehicle) { el('selected-name').textContent = 'No hay una unidad activa'; showError('La API no devolvió vehículos activos.'); return; }
+    el('selected-name').textContent = vehicleDisplayName(vehicle);
+    selectedVehicle = vehicle;
+    await selectVehicle();
   } catch (error) {
-    el('vehicle-select').replaceChildren(new Option('No se pudieron cargar vehículos', ''));
     showError(error.message);
   }
 }
 
 async function selectVehicle() {
-  const id = el('vehicle-select').value;
-  selectedVehicle = vehicles.find((vehicle) => String(vehicle.id_vehiculo) === id) || null;
+  const id = String(selectedVehicle?.id_vehiculo ?? '');
   commands = [];
   updateStickLabels();
-  el('selected-name').textContent = selectedVehicle ? vehicleDisplayName(selectedVehicle) : 'Selecciona una unidad';
   el('demo-select').disabled = true; el('demo-select').replaceChildren(new Option('Cargando DEMOs…', '')); el('demo-run').disabled = true;
-  renderCommands([], () => {});
-  if (!selectedVehicle) { el('command-buttons').firstElementChild.textContent = 'Selecciona un vehículo para consultar sus comandos.'; return; }
+  renderCommands([]);
+  if (!selectedVehicle) return;
   showReady('Consultando catálogo…');
   try {
     const [commandResult, demoResult] = await Promise.all([api.commands(id), api.demos(id)]);
     if (String(selectedVehicle.id_vehiculo) !== id) return;
     commands = activeCommands(commandResult);
     updateStickLabels();
-    renderCommands(commands, sendCommand);
+    renderCommands(commands);
     renderDemos(Array.isArray(demoResult) ? demoResult : []);
+    renderOutputControls(commands, outputStates, sendOutputCommand);
+    for (const kind of ['led', 'sound']) {
+      if (outputStates[kind]) setOutputState(kind, outputStates[kind], 'Estimado a partir de pulsos enviados anteriormente en esta pestaña.');
+    }
+    try {
+      const state = await api.state(id);
+      const lastCommand = commands.find((command) => String(command.id_comando) === String(state.id_comando));
+      const kind = lastCommand ? outputKindOf(lastCommand) : null;
+      if (kind) {
+        const map = outputCommandMap(commands, kind);
+        if (map.on && String(map.on.id_comando) === String(lastCommand.id_comando)) { outputStates[kind] = 'on'; setOutputState(kind, 'on'); }
+        else if (map.off && String(map.off.id_comando) === String(lastCommand.id_comando)) { outputStates[kind] = 'off'; setOutputState(kind, 'off'); }
+      }
+    } catch { /* no hay estado inicial registrado */ }
+    await loadVehicleHistory(id);
     showReady(`${commands.length} comandos disponibles`);
   } catch (error) { showError(error.message); }
 }
 
-async function sendCommand(command, { priority = false } = {}) {
+async function loadVehicleHistory(id = selectedVehicle?.id_vehiculo) {
+  if (!id) return;
+  try {
+    const rows = await api.history(id);
+    apiHistory = (Array.isArray(rows) ? rows : []).map((row) => {
+      const data = { ...row };
+      if (!data.comando) data.comando = data.nombre_comando || data.comando_nombre || data.accion || data.nombre;
+      const shaped = addEvent({ tipo: 'historial', accion: data.origen || 'movimiento', datos: data, fecha_hora: data.fecha_hora || data.fecha || data.fecha_registro || data.created_at }, commands);
+      return shaped;
+    }).sort((a, b) => b.timestamp - a.timestamp).slice(0, 30);
+    if (apiHistory.length && !liveHistory.length) setCurrentMovement(apiHistory[0]);
+  } catch { apiHistory = []; }
+  refreshHistory();
+}
+
+async function sendCommand(command, { priority = false, outputKind = null, intent = 'action' } = {}) {
   if (!selectedVehicle || (actionPending && !priority) || (demoRunning && !priority)) return;
   actionPending = true;
   pendingRequests += 1;
   const actionId = ++latestAction;
-  const buttons = [...document.querySelectorAll('.command-button, .joy-key')];
+  const buttons = [...document.querySelectorAll('.command-button, .joy-key, .output-action')];
   const stopId = String(directionCommand(commands, 'stop')?.id_comando ?? '');
   buttons.forEach((button) => { button.disabled = button.dataset.direction !== 'stop' && button.dataset.commandId !== stopId; });
-  el('last-command').textContent = commandLabel(command);
   showReady('Solicitado · esperando API…');
+  if (outputKind) expectedOutputEvents.set(String(command.id_comando), { seen: false });
   try {
     await api.execute(selectedVehicle.id_vehiculo, command.id_comando);
+    if (outputKind) { applyOutputCommand(command, outputKind, intent); expectedOutputEvents.delete(String(command.id_comando)); }
+    const record = { title: commandLabel(command), detail: 'Orden aceptada por la API', category: 'comando', time: new Date().toLocaleTimeString('es-MX'), timestamp: Date.now(), commandId: command.id_comando };
+    setCurrentMovement(record); liveHistory.unshift(record); liveHistory = liveHistory.slice(0, 30); refreshHistory();
     if (actionId === latestAction) showReady('Aceptado por API · esperando evento');
-  } catch (error) { if (actionId === latestAction) showError(error.message); }
+  } catch (error) {
+    const pendingOutput = outputKind ? expectedOutputEvents.get(String(command.id_comando)) : null;
+    if (pendingOutput?.seen) applyOutputCommand(command, outputKind, intent);
+    if (outputKind) expectedOutputEvents.delete(String(command.id_comando));
+    if (actionId === latestAction) showError(error.message);
+  }
   finally {
     pendingRequests = Math.max(0, pendingRequests - 1);
     actionPending = pendingRequests > 0;
@@ -83,6 +195,10 @@ async function sendCommand(command, { priority = false } = {}) {
   }
 }
 
+function sendOutputCommand(command, intent) {
+  sendCommand(command, { outputKind: outputKindOf(command), intent });
+}
+
 function handleDirection(direction) {
   const command = directionCommand(commands, direction);
   if (command) sendCommand(command, { priority: direction === 'stop' });
@@ -92,7 +208,7 @@ function handleDirection(direction) {
 function getStickMaps() {
   const primary = Object.fromEntries(['up', 'down', 'left', 'right'].map((direction) => [direction, directionCommand(commands, direction) || null]));
   const reserved = new Set([...Object.values(primary), directionCommand(commands, 'stop')].filter(Boolean).map((command) => command.id_comando));
-  const remaining = commands.filter((command) => !reserved.has(command.id_comando));
+  const remaining = commands.filter((command) => !reserved.has(command.id_comando) && !isOutputCommand(command));
   return { drive: primary, implement: auxiliaryCommandMap(remaining) };
 }
 
@@ -125,17 +241,16 @@ async function runDemo() {
   const demoId = el('demo-select').value;
   if (!demoId) return;
   demoRunning = true; el('demo-run').disabled = true;
-  el('demo-note').textContent = 'DEMO en ejecución. Los eventos aparecen aquí conforme los emite la API.';
-  document.querySelectorAll('.command-button, .joy-key').forEach((button) => { button.disabled = button.dataset.direction !== 'stop' && button.dataset.commandId !== String(directionCommand(commands, 'stop')?.id_comando); });
-  el('demo-note').textContent = 'La API actual no expone cancelación de DEMO. DETENER tiene prioridad local, pero no interrumpe la secuencia del servidor.';
+  setDemoProgress('running', 'DEMO en ejecución · esperando los pasos que envía la API…');
+  document.querySelectorAll('.command-button, .joy-key, .output-action').forEach((button) => { button.disabled = true; });
   try {
     await api.runDemo(selectedVehicle.id_vehiculo, demoId);
-    el('demo-note').textContent = 'La API informó que la DEMO finalizó.';
-  } catch (error) { el('demo-note').textContent = `No se completó: ${error.message}`; }
+    setDemoProgress('done', 'La API informó que la DEMO finalizó.');
+  } catch (error) { setDemoProgress('error', `No se completó: ${error.message}`); }
   finally {
     demoRunning = false; el('demo-run').disabled = !el('demo-select').value;
     const stopId = String(directionCommand(commands, 'stop')?.id_comando ?? '');
-    document.querySelectorAll('.command-button, .joy-key').forEach((button) => {
+    document.querySelectorAll('.command-button, .joy-key, .output-action').forEach((button) => {
       const isStop = button.dataset.direction === 'stop' || button.dataset.commandId === stopId;
       button.disabled = actionPending && !isStop;
     });
@@ -248,29 +363,42 @@ function startSocket() {
   socketStop?.();
   socketStop = connectSocket({
     onState: (text, state) => setIndicator('ws-dot', 'ws-status', text, state),
-    onEvent: addEvent,
+    onEvent: recordLiveEvent,
   });
 }
 
-function configureSettings() {
-  const dialog = el('settings-dialog');
-  el('api-url').value = localStorage.getItem('control-iot-api-url') || DEFAULT_API_URL;
-  el('settings-open').addEventListener('click', () => dialog.showModal());
-  el('settings-close').addEventListener('click', () => dialog.close());
-  el('settings-form').addEventListener('submit', (event) => {
-    event.preventDefault();
-    if (event.submitter?.id !== 'settings-save') { dialog.close(); return; }
-    const value = el('api-url').value.trim().replace(/\/+$/, '');
-    if (!/^https:\/\//i.test(value)) { el('api-url').setCustomValidity('Usa una dirección HTTPS pública.'); el('api-url').reportValidity(); return; }
-    el('api-url').setCustomValidity('');
-    localStorage.setItem('control-iot-api-url', value);
-    dialog.close(); startSocket(); checkApi(); loadVehicles();
+function configureTabs() {
+  const buttons = [...document.querySelectorAll('.tab-button')];
+  const views = [...document.querySelectorAll('.tab-view')];
+  const activate = (name) => {
+    for (const button of buttons) {
+      const active = button.dataset.tab === name;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', String(active));
+      button.tabIndex = active ? 0 : -1;
+    }
+    for (const view of views) {
+      const active = view.dataset.view === name;
+      view.hidden = !active;
+      view.classList.toggle('is-active', active);
+    }
+    if (name === 'history') loadVehicleHistory();
+  };
+  buttons.forEach((button, index) => {
+    button.addEventListener('click', () => activate(button.dataset.tab));
+    button.addEventListener('keydown', (event) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      const next = (index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+      buttons[next].focus(); activate(buttons[next].dataset.tab);
+    });
   });
+  el('history-prev').addEventListener('click', () => { historyPage = Math.max(0, historyPage - 1); refreshHistory(); });
+  el('history-next').addEventListener('click', () => { historyPage += 1; refreshHistory(); });
+  el('refresh-history').addEventListener('click', () => loadVehicleHistory());
 }
 
-el('vehicle-select').addEventListener('change', selectVehicle);
 el('demo-select').addEventListener('change', () => { el('demo-run').disabled = !el('demo-select').value || demoRunning; });
 el('demo-run').addEventListener('click', runDemo);
-el('clear-events').addEventListener('click', () => { const feed = el('event-feed'); feed.replaceChildren(); const note = document.createElement('div'); note.className = 'empty-note'; note.textContent = 'Aún no se han recibido eventos.'; feed.append(note); });
-configureJoystick(); configureSettings(); startSocket(); checkApi(); loadVehicles();
+configureJoystick(); configureTabs(); startSocket(); checkApi(); loadVehicles();
 setInterval(checkApi, 30000);

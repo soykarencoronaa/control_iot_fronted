@@ -2,91 +2,83 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#141817">
-  <meta name="description" content="Consola IoT personalizada para controlar la excavadora Makasan de orugas metálicas.">
-  <title>Excavadora Makasan · Control IoT</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#171b19">
+  <meta name="description" content="Consola de control IoT para excavadora Makasan.">
+  <title>Makasan · Control IoT</title>
   <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="./css/styles.css">
   <link rel="stylesheet" href="./css/makasan-theme.css">
+  <link rel="stylesheet" href="./css/dashboard.css">
   <script type="module" src="./js/app.js"></script>
 </head>
-<body>
-  <header class="container-fluid topbar">
-    <a class="brand" href="./" aria-label="Control IoT, inicio"><span class="brand-icon" aria-hidden="true">C</span><span>CONTROL<span class="brand-accent">/IOT</span><small>VEHICLE CONSOLE</small></span></a>
-    <div class="topbar-right"><span id="selected-name" class="selected-name">Selecciona un vehículo</span><button class="icon-button" id="settings-open" type="button" aria-label="Configurar conexión" title="Configurar conexión">⚙</button></div>
+<body class="dashboard-body">
+  <header class="topbar dashboard-topbar">
+    <a class="brand" href="./" aria-label="Control IoT, inicio"><span class="brand-icon" aria-hidden="true">M</span><span>MAKASAN<span class="brand-accent">/CONTROL</span><small>EXCAVADORA IoT</small></span></a>
+    <nav class="tab-nav" role="tablist" aria-label="Secciones del control">
+      <button class="tab-button is-active" id="tab-control-button" type="button" role="tab" aria-selected="true" aria-controls="tab-control" data-tab="control"><span aria-hidden="true">◉</span> Control</button>
+      <button class="tab-button" id="tab-history-button" type="button" role="tab" aria-selected="false" aria-controls="tab-history" data-tab="history"><span aria-hidden="true">◷</span> Historial <b id="history-count">0</b></button>
+    </nav>
+    <div class="connection-cluster"><span class="connection-chip"><i id="api-dot" class="state-dot pending"></i><span id="api-status">Conectando API</span></span><span class="connection-chip ws-chip"><i id="ws-dot" class="state-dot pending"></i><span id="ws-status">Conectando WS</span></span></div>
   </header>
-  <main class="container-fluid page-shell">
-    <section class="machine-hero" aria-labelledby="page-title">
-      <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-line"></span> MAKASAN · EQUIPO DE OBRA A ESCALA</div>
-        <div class="hero-kickers"><span class="hero-kicker">ORUGAS METÁLICAS</span><span class="hero-kicker">CONTROL IoT</span></div>
-        <h1 id="page-title">Excavadora<br><em>Oruga de Metal</em></h1>
-        <p class="hero-description">Panel de operación para tu excavadora Makasan. Controla los movimientos desde el joystick y observa cada comando en el canal de eventos.</p>
-        <div class="hero-bottom">
-          <div class="vehicle-picker"><label for="vehicle-select">UNIDAD REGISTRADA EN LA API</label><select id="vehicle-select" class="form-select" aria-label="Seleccionar vehículo"><option value="">Cargando vehículos…</option></select></div>
-          <div class="hero-model"><span class="model-mark">M</span><span><b>MAKASAN</b><small>MODELO DE JUGUETE</small></span></div>
-        </div>
-      </div>
-      <div class="machine-visual">
-        <div class="visual-grid" aria-hidden="true"></div>
-        <img src="./assets/excavadora-makasan.png" alt="Excavadora de orugas de metal amarilla, modelo de juguete" class="machine-image">
-        <div class="photo-stamp"><span class="stamp-dot"></span> UNIDAD DE EXHIBICIÓN</div>
-        <div class="visual-serial"><span>MAKASAN</span><b>EXCAVADORA</b><small>ORUGA · METAL</small></div>
-        <div class="visual-number">01</div>
-      </div>
-    </section>
 
-    <section class="status-grid" aria-label="Conectividad del sistema">
-      <article class="status-card"><div class="status-label"><span class="status-symbol ws-symbol">⌁</span> WEBSOCKET <span class="info-dot" title="Conexión de este navegador con el servidor; no confirma conexión física del vehículo">i</span></div><div class="status-value"><i id="ws-dot" class="state-dot pending"></i><span id="ws-status">Conectando</span></div><span class="status-caption">Canal de eventos en tiempo real</span></article>
-      <article class="status-card"><div class="status-label"><span class="status-symbol api-symbol">↗</span> API AWS · 21 SERVICIOS</div><div class="status-value"><i id="api-dot" class="state-dot pending"></i><span id="api-status">Comprobando</span></div><span class="status-caption">Verificación de acceso al servidor</span></article>
-      <article class="status-card"><div class="status-label"><span class="status-symbol db-symbol">▤</span> BASE DE DATOS · AMAZON RDS</div><div class="status-value"><i class="state-dot unknown"></i><span id="db-status">Sin verificar</span></div><span class="status-caption">La API no expone diagnóstico seguro de RDS</span></article>
-    </section>
+  <main class="dashboard-shell">
+    <section id="tab-control" class="tab-view is-active" role="tabpanel" aria-labelledby="tab-control-button" data-view="control">
+      <div class="view-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> CONTROL REMOTO · UNIDAD MAKASAN</div><h1>Panel de operación</h1></div><div class="unit-badge"><span class="unit-dot"></span><span id="selected-name">Conectando excavadora…</span><small>UNIDAD ACTIVA</small></div></div>
 
-    <section class="workspace-grid">
-      <article class="panel control-panel">
-        <div class="panel-heading"><div><div class="eyebrow eyebrow-dark">MANDO PRINCIPAL</div><h2>Joystick virtual</h2></div><span class="touch-hint">TACTIL · TECLADO</span></div>
-        <p class="panel-description">Arrastra la perilla hacia la dirección deseada. Al soltar, vuelve al centro y envía DETENER si ese comando está disponible.</p>
-        <div class="joystick-layout">
-          <div class="gamepad-shell">
-            <div class="gamepad-topline"><span class="gamepad-brand"><i></i> MAKASAN CONTROL</span><span class="gamepad-mode">DOBLE JOYSTICK · 8 FUNCIONES</span></div>
-            <div class="dual-stick-row">
-              <div class="stick-module">
-                <span id="drive-up-label" class="axis-label direction-up">AVANZAR</span><span id="drive-left-label" class="axis-label direction-left">IZQUIERDA</span><span id="drive-right-label" class="axis-label direction-right">DERECHA</span><span id="drive-down-label" class="axis-label direction-down">RETROCEDER</span>
-                <div id="joystick" class="analog-stick" role="group" tabindex="0" aria-label="Joystick de traslación: arrastra la perilla o usa las flechas del teclado">
-                  <div class="stick-track" aria-hidden="true"><span class="track-mark mark-up">▲</span><span class="track-mark mark-left">◀</span><span class="track-mark mark-right">▶</span><span class="track-mark mark-down">▼</span></div>
-                  <div class="stick-knob" id="stick-knob" aria-hidden="true"><span class="knob-cap">M</span></div>
+      <div class="control-dashboard">
+        <article class="panel controller-panel">
+          <div class="panel-heading"><div><div class="eyebrow eyebrow-dark">MANDO PRINCIPAL</div><h2>Controles de movimiento</h2></div><span class="touch-hint">TACTIL · TECLADO</span></div>
+          <div class="controller-content">
+            <div class="gamepad-shell">
+              <div class="gamepad-topline"><span class="gamepad-brand"><i></i> MAKASAN CONTROL</span><span class="gamepad-mode">DOBLE JOYSTICK · 8 EJES</span></div>
+              <div class="dual-stick-row">
+                <div class="stick-module">
+                  <span id="drive-up-label" class="axis-label direction-up">AVANZAR</span><span id="drive-left-label" class="axis-label direction-left">IZQUIERDA</span><span id="drive-right-label" class="axis-label direction-right">DERECHA</span><span id="drive-down-label" class="axis-label direction-down">RETROCEDER</span>
+                  <div id="joystick" class="analog-stick" role="group" tabindex="0" aria-label="Joystick de traslación: arrastra la perilla o usa las flechas del teclado"><div class="stick-track" aria-hidden="true"><span class="track-mark mark-up">▲</span><span class="track-mark mark-left">◀</span><span class="track-mark mark-right">▶</span><span class="track-mark mark-down">▼</span></div><div class="stick-knob" id="stick-knob" aria-hidden="true"><span class="knob-cap">M</span></div></div>
+                  <span class="stick-caption">TRASLACIÓN</span>
                 </div>
-                <span class="stick-caption">TRASLACIÓN</span>
-              </div>
-              <div class="stick-module">
-                <span id="implement-up-label" class="axis-label direction-up">SIN COMANDO</span><span id="implement-left-label" class="axis-label direction-left">SIN COMANDO</span><span id="implement-right-label" class="axis-label direction-right">SIN COMANDO</span><span id="implement-down-label" class="axis-label direction-down">SIN COMANDO</span>
-                <div id="implement-joystick" class="analog-stick" role="group" tabindex="0" aria-label="Joystick de implemento: arrastra la perilla o usa las flechas del teclado">
-                  <div class="stick-track" aria-hidden="true"><span class="track-mark mark-up">▲</span><span class="track-mark mark-left">◀</span><span class="track-mark mark-right">▶</span><span class="track-mark mark-down">▼</span></div>
-                  <div class="stick-knob" id="implement-stick-knob" aria-hidden="true"><span class="knob-cap">M</span></div>
+                <div class="stick-module">
+                  <span id="implement-up-label" class="axis-label direction-up">SIN COMANDO</span><span id="implement-left-label" class="axis-label direction-left">SIN COMANDO</span><span id="implement-right-label" class="axis-label direction-right">SIN COMANDO</span><span id="implement-down-label" class="axis-label direction-down">SIN COMANDO</span>
+                  <div id="implement-joystick" class="analog-stick" role="group" tabindex="0" aria-label="Joystick de brazo: arrastra la perilla o usa las flechas del teclado"><div class="stick-track" aria-hidden="true"><span class="track-mark mark-up">▲</span><span class="track-mark mark-left">◀</span><span class="track-mark mark-right">▶</span><span class="track-mark mark-down">▼</span></div><div class="stick-knob" id="implement-stick-knob" aria-hidden="true"><span class="knob-cap">M</span></div></div>
+                  <span class="stick-caption">BRAZO Y GIRO</span>
                 </div>
-                <span class="stick-caption">FUNCIONES AUXILIARES</span>
               </div>
+              <div class="gamepad-grip grip-left" aria-hidden="true"></div><div class="gamepad-grip grip-right" aria-hidden="true"></div>
             </div>
-            <div class="gamepad-grip grip-left" aria-hidden="true"></div><div class="gamepad-grip grip-right" aria-hidden="true"></div>
+            <div class="movement-readout"><div class="readout-top"><span class="readout-label">ÚLTIMO MOVIMIENTO</span><span id="movement-live-dot" class="live-dot"></span></div><strong id="last-command">Esperando comando</strong><span id="action-status" class="action-status">Conectando con la API fija…</span><button id="joystick-stop" class="joy-key joystick-stop" data-direction="stop" type="button" aria-label="Detener la excavadora">■ <span>DETENER</span></button></div>
           </div>
-          <div class="move-readout"><span class="readout-label">ÚLTIMO COMANDO</span><strong id="last-command">—</strong><span class="readout-rule"></span><span class="readout-label">ESTADO API</span><span id="action-status" class="action-status">Listo para conectar</span><button id="joystick-stop" class="joy-key joystick-stop" data-direction="stop" type="button" aria-label="Detener la excavadora">■ <span>DETENER</span></button></div>
+          <div class="movement-footer"><span><i class="status-mini-dot"></i> Comandos enviados por API REST</span><span id="command-count">0 movimientos</span></div>
+        </article>
+
+        <div class="operations-column">
+          <article class="panel demo-panel">
+            <div class="panel-heading"><div><div class="eyebrow eyebrow-dark">SECUENCIA PROGRAMADA</div><h2>Demostración</h2></div><span class="demo-icon" aria-hidden="true">▶</span></div>
+            <p class="demo-description">Ejecuta la secuencia configurada para esta excavadora.</p>
+            <div class="demo-controls"><select id="demo-select" class="form-select" aria-label="Seleccionar demostración" disabled><option>Cargando demostraciones…</option></select><button id="demo-run" class="btn btn-demo" type="button" disabled><span>▶</span> Ejecutar</button></div>
+            <div id="demo-progress" class="demo-progress" data-state="idle"><span id="demo-progress-icon" class="demo-progress-icon">✓</span><span id="demo-note">No hay una demostración en ejecución.</span></div>
+          </article>
+
+          <article class="panel outputs-panel">
+            <div class="panel-heading"><div><div class="eyebrow eyebrow-dark">FUNCIONES AUXILIARES</div><h2>Luces y sonido</h2></div><span class="touch-hint">API</span></div>
+            <p class="output-caption">El indicador muestra la última orden aceptada por la API.</p>
+            <div class="output-grid">
+              <section class="output-card" id="led-card" data-state="unknown" aria-label="Control de LED"><div class="output-top"><span class="output-graphic lamp-graphic" id="led-graphic" aria-hidden="true"><span></span></span><span class="output-kind">LED</span></div><strong id="led-status">Sin comando LED</strong><span class="output-detail" id="led-detail">Agrega los comandos LED al catálogo de la API.</span><div class="output-actions" id="led-actions"></div></section>
+              <section class="output-card" id="sound-card" data-state="unknown" aria-label="Control de sonido"><div class="output-top"><span class="output-graphic sound-graphic" id="sound-graphic" aria-hidden="true">♫</span><span class="output-kind">SONIDO</span></div><strong id="sound-status">Sin comando de sonido</strong><span class="output-detail" id="sound-detail">Agrega los comandos de sonido al catálogo de la API.</span><div class="output-actions" id="sound-actions"></div></section>
+            </div>
+            <p class="telemetry-note">El equipo no reporta telemetría de LED o sonido; aquí se refleja la orden, no una confirmación física.</p>
+          </article>
         </div>
-        <div class="control-divider"></div>
-        <div class="panel-heading command-heading"><div><div class="eyebrow eyebrow-dark">CATÁLOGO REAL</div><h2>Controles disponibles</h2></div><span id="command-count" class="count-badge">0 comandos</span></div>
-        <p class="panel-description compact">Los botones se generan con los comandos activos devueltos por la API.</p>
-        <div id="command-buttons" class="command-grid" aria-live="polite"><p class="empty-note">Selecciona un vehículo para consultar sus comandos.</p></div>
-      </article>
-
-      <aside class="side-column">
-        <article class="panel demo-panel"><div class="panel-heading"><div><div class="eyebrow eyebrow-dark">SECUENCIA PROGRAMADA</div><h2>Demostraciones</h2></div><span class="demo-icon" aria-hidden="true">▶</span></div><p class="panel-description">Selecciona una DEMO existente del vehículo. Se ejecuta en el orden y con los tiempos configurados en la API.</p><label class="field-label" for="demo-select">DEMO DISPONIBLE</label><select id="demo-select" class="form-select" disabled><option>Selecciona un vehículo</option></select><button id="demo-run" class="btn btn-demo w-100" type="button" disabled><span>▶</span> Ejecutar DEMO</button><p id="demo-note" class="demo-note">No hay una secuencia en ejecución.</p></article>
-        <article class="panel event-panel"><div class="panel-heading"><div><div class="eyebrow eyebrow-dark">SEÑAL EN VIVO</div><h2>Eventos recibidos</h2></div><button id="clear-events" type="button" class="clear-button">Limpiar</button></div><div id="event-feed" class="event-feed" aria-live="polite" aria-label="Eventos WebSocket"><div class="empty-note">Esperando conexión con el canal de eventos…</div></div></article>
-      </aside>
+      </div>
     </section>
-    <footer class="page-footer"><span><b>KAREN CORONA TORRES</b> · Aplicación de control IoT</span><span>CONTROL WEB · API REST + WSS</span></footer>
-  </main>
 
-  <dialog id="settings-dialog" class="settings-dialog"><form method="dialog" id="settings-form"><div class="panel-heading"><div><div class="eyebrow eyebrow-dark">CONFIGURACIÓN</div><h2>Conexión con la API</h2></div><button type="button" id="settings-close" class="icon-button close-dialog" aria-label="Cerrar">×</button></div><label class="field-label" for="api-url">URL base HTTPS</label><input id="api-url" class="form-control" type="url" required placeholder="https://tu-api.example.org"><p class="settings-help">Se guarda en este navegador. Nunca introduzcas claves secretas aquí.</p><div class="dialog-actions"><button class="btn btn-outline-secondary" value="cancel">Cancelar</button><button id="settings-save" class="btn btn-primary" value="default">Guardar y conectar</button></div></form></dialog>
+    <section id="tab-history" class="tab-view history-view" role="tabpanel" aria-labelledby="tab-history-button" data-view="history" hidden>
+      <div class="view-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> ACTIVIDAD DEL EQUIPO</div><h1>Historial de operación</h1></div><button id="refresh-history" type="button" class="secondary-button">↻ Actualizar</button></div>
+      <article class="panel current-movement-panel"><div class="current-movement-icon">↗</div><div class="current-movement-copy"><span class="readout-label">MOVIMIENTO ACTUAL / ÚLTIMO EVENTO</span><strong id="history-current">Esperando actividad de la excavadora</strong><span id="history-current-time">El evento más reciente aparecerá aquí.</span></div><span class="live-pill"><i></i> EN VIVO</span></article>
+      <article class="panel history-panel"><div class="panel-heading"><div><div class="eyebrow eyebrow-dark">REGISTROS</div><h2>Movimientos recientes</h2></div><span id="history-page-label" class="history-page-label">0 eventos</span></div><div id="history-list" class="history-list"><p class="empty-note">Cargando historial…</p></div><div class="history-pagination"><span id="history-range">—</span><div><button id="history-prev" class="page-button" type="button" aria-label="Página anterior" disabled>←</button><button id="history-next" class="page-button" type="button" aria-label="Página siguiente" disabled>→</button></div></div></article>
+    </section>
+
+    <footer class="dashboard-footer"><span>MAKASAN · CONSOLA DE OPERACIÓN</span><span>API REST <i></i> WEBSOCKET</span></footer>
+  </main>
 </body>
 </html>

@@ -4,8 +4,7 @@ export const API_TIMEOUT_MS = 10000;
 export const EVENT_LIMIT = 30;
 
 export function apiBase() {
-  const configured = localStorage.getItem('control-iot-api-url') || DEFAULT_API_URL;
-  return configured.trim().replace(/\/+$/, '');
+  return DEFAULT_API_URL;
 }
 
 export function wsUrl() {
