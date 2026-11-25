@@ -11,7 +11,7 @@ Panel de eventos ◀────────────── WSS /ws ◀──
 Indicador API ────────────────── GET /
 ```
 
-`index.html` define la vista, `css/styles.css` contiene los estilos responsivos, y los módulos `js/api.js`, `js/commands.js`, `js/socket.js`, `js/view.js` y `js/app.js` separan HTTP, reglas de nombres de comandos, WebSocket, renderizado y coordinación. Bootstrap 5 aporta los controles de formulario; el favicon es `favicon.svg`.
+`index.html` define la vista, `assets/css/styles.css` contiene los estilos responsivos, y los módulos `assets/js/api.js`, `assets/js/commands.js`, `assets/js/socket.js`, `assets/js/view.js` y `assets/js/app.js` separan HTTP, reglas de nombres de comandos, WebSocket, renderizado y coordinación. Bootstrap 5 aporta los controles de formulario; el favicon es `assets/favicon.svg`.
 
 ## Contratos observados en el código de la API proporcionado
 
@@ -49,9 +49,9 @@ Si el navegador muestra fallo de CORS, configura CORS en el backend como se desc
 
 ## Publicación en GitHub Pages
 
-1. Crea un repositorio GitHub público para esta carpeta y sube los archivos preservando las carpetas `css/` y `js/`.
+1. Crea un repositorio GitHub público para esta carpeta y sube los archivos preservando `assets/css/`, `assets/js/` y `assets/favicon.svg`.
 2. En **Settings → Pages**, selecciona la rama `main` y la carpeta `/ (root)`.
-3. GitHub sirve `index.html` desde la ruta del repositorio. Los assets usan rutas relativas (`./css`, `./js`, `./favicon.svg`) para funcionar bajo subruta.
+3. GitHub sirve `index.html` desde la ruta del repositorio. Los recursos usan rutas relativas (`./assets/css`, `./assets/js`, `./assets/favicon.svg`) para funcionar bajo subruta.
 4. Para el dominio personalizado, configura **Custom domain** en Pages y revisa DNS antes de activar **Enforce HTTPS**. `CNAME` ya contiene el host solicitado, pero por sí solo no crea registros DNS.
 5. Después de publicar, abre DevTools, revisa Console/Network, concede permiso si el navegador exige conexión segura y prueba HTTP y WSS. El cliente HTTP personalizado puede requerir la configuración CORS del origen Pages.
 
